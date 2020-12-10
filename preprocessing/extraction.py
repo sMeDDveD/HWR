@@ -21,11 +21,15 @@ class ImageExtractor:
         self.grayscale = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.grayscale = cv2.GaussianBlur(self.grayscale, (5, 5), 0)
 
+        # adaptive thresholding is sometimes better
         _, self.thresh = cv2.threshold(self.grayscale, ImageExtractor.threshold, 255,
                                        cv2.THRESH_OTSU + cv2.THRESH_BINARY)
 
+    # probably better to extract words at this stage too
     def extract_letters(self, height, width, eroding=4, save_artifacts=False) -> List[Any]:
-        opening = cv2.morphologyEx(self.thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5)))
+        # removing some small defects
+        opening = cv2.morphologyEx(self.thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+        # increasing contours of letters for later use in connected components method
         img_erode = cv2.erode(opening, np.ones((eroding, eroding), np.uint8), iterations=3)
 
         contours, hierarchy = cv2.findContours(img_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -35,16 +39,18 @@ class ImageExtractor:
             output = self.image.copy()
 
         letters = []
-        for idx, contour in enumerate(contours):
+        for index, contour in enumerate(contours):
             # checking for parent contour
-            if hierarchy[0][idx][3] == 0:
+            if hierarchy[0][index][3] == 0:
                 (x, y, w, h) = cv2.boundingRect(contour)
                 if save_artifacts:
                     cv2.rectangle(output, (x, y), (x + w, y + h), (0, 0, 255), 1)
 
+                # making mask for the contour
                 mask = np.zeros_like(img_erode)
                 cv2.drawContours(mask, [contour], 0, 255, -1)
 
+                # take only the part that is inside the current contour
                 out = 255 * np.ones_like(img_erode)
                 out[mask == 255] = self.thresh[mask == 255]
 

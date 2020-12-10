@@ -10,6 +10,7 @@ with open("postprocessing\words.txt", "r") as words_file:
     for word in words_file:
         _fuzzy_set.add(word[:-1])
 
+# common mistakes
 digits_to_letters = {
     "0": "o",
     "1": "l",
@@ -29,6 +30,7 @@ def de_digit(word: str):
 
 
 def correct_word(word: str, threshold=0.8):
+    # information about other candidates is not used
     corrections = _fuzzy_set.get(word)
     if corrections is None:
         return word
@@ -69,6 +71,7 @@ def letters_to_words(letters: List[ExtractedLetter]):
             difference = letters[i + 1].coordinates[0] - letters[i].coordinates[0]
             difference -= letters[i].width
 
+            # some heuristic
             if difference > average_width / 2:
                 words.append(current_word)
                 current_word = ""

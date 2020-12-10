@@ -1,16 +1,16 @@
+import string
 from typing import List
 
 import keras.models
 import numpy as np
-from matplotlib import pyplot as plt
 
 from preprocessing.letter import ExtractedLetter
 
-MAPPING = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69,
-           70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
-           85, 86, 87, 88, 89, 90, 97, 98, 99, 100, 101, 102, 103, 104,
-           105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-           117, 118, 119, 120, 121, 122]
+DIGITS = [ord(c) for c in string.digits]
+LETTERS = [ord(c) for c in string.ascii_uppercase + string.ascii_lowercase]
+
+# map classes to ascii codes
+MAPPING = DIGITS + LETTERS
 
 
 def predicted_class_to_letter(prediction):
@@ -37,6 +37,7 @@ class Predictor:
         result = np.argmax(prediction, axis=-1)
         letter.prediction = predicted_class_to_letter(result)
 
+        # keep the most likely candidates
         for class_index in range(len(prediction)):
             if prediction[class_index] > 0.3:
                 letter.candidates += predicted_class_to_letter(class_index)
