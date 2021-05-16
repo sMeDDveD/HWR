@@ -2,13 +2,13 @@ from typing import List
 
 from cfuzzyset import cFuzzySet as FuzzySet
 
-from preprocessing.letter import ExtractedLetter
+from classifier.predicted_letter import PredictedLetter
 
 _fuzzy_set = FuzzySet(use_levenshtein=True)
 
-with open("postprocessing\words.txt", "r") as words_file:
-    for word in words_file:
-        _fuzzy_set.add(word[:-1])
+with open("postprocessing/words.txt", "r") as words_file:
+    for word in words_file.readlines():
+        _fuzzy_set.add(word.strip())
 
 # common mistakes
 digits_to_letters = {
@@ -36,10 +36,10 @@ def correct_word(word: str, threshold=0.8):
         return word
 
     corrected_word = None
-    for correction in corrections:
-        if len(correction[1]) == len(word):
-            if correction[0] >= threshold:
-                corrected_word = correction[1]
+    for score, matched_word in corrections:
+        if len(matched_word) == len(word):
+            if score >= threshold:
+                corrected_word = matched_word
 
     if corrected_word is None:
         without_digits = de_digit(word)
@@ -49,27 +49,25 @@ def correct_word(word: str, threshold=0.8):
             corrected_word = correct_word(without_digits)
 
     if word[0].isupper():
-        corrected_word = corrected_word[0].upper() + corrected_word[1:]
+        corrected_word = corrected_word.capitalize()
 
     return corrected_word
 
 
-def letters_to_words(letters: List[ExtractedLetter]):
-    words = []
+def letters_to_words(letters: List[PredictedLetter]) -> List[str]:
+    words: List[str] = []
 
     letters_number = len(letters)
     current_word = ""
 
-    average_width = sum(map(lambda x: x.width, letters)) / letters_number
+    average_width = sum(map(lambda x: x.extracted.width, letters)) / letters_number
 
     for i in range(letters_number):
-        current_word += letters[i].prediction
-
-        print(letters[i].candidates)
+        current_word += letters[i].probable_letter
 
         if i < letters_number - 1:
-            difference = letters[i + 1].coordinates[0] - letters[i].coordinates[0]
-            difference -= letters[i].width
+            difference = letters[i + 1].extracted.coordinates[0] - letters[i].extracted.coordinates[0]
+            difference -= letters[i].extracted.width
 
             # some heuristic
             if difference > average_width / 2:

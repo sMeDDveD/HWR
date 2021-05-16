@@ -2,6 +2,7 @@ import tkinter as tk
 from enum import Enum, auto, unique
 from tkinter import messagebox
 
+import numpy as np
 from PIL import Image
 from PIL import ImageColor
 from PIL import ImageDraw
@@ -16,7 +17,7 @@ class MouseState(Enum):
 
 
 class Sketcher:
-    DEFAULT_MODEL = "model/models/convolutional.h5"
+    DEFAULT_MODEL = "classifier/models/convolutional.h5"
     LINE_WIDTH = 8
 
     def __init__(self, parent, x_position, y_position, size):
@@ -54,17 +55,13 @@ class Sketcher:
         self.drawing_area.bind("<ButtonPress-1>", self.mouse_press)
         self.drawing_area.bind("<ButtonRelease-1>", self.mouse_release)
 
-
     def recognize(self):
         if self.points:
             self.draw.line(self.points, ImageColor.getrgb("black"),
                            width=Sketcher.LINE_WIDTH, joint="curve")
             self.points.clear()
 
-        filename = "images/temp.png"
-        self.image.save(filename)
-
-        result = self.recognizer.recognize("temp.png", "images")
+        result = self.recognizer.recognize(np.asarray(self.image))
         print(result)
         messagebox.showinfo("Result", result)
 
