@@ -58,7 +58,7 @@ class ImageExtractor:
         img_erode = c.erode(
             opening,
             np.ones((eroding, eroding), np.uint8),
-            iterations=3
+            iterations=2
         )
 
         return img_erode

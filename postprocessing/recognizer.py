@@ -17,4 +17,4 @@ class Recognizer:
         extracted_letters = extractor.extract_letters(28, 28, eroding=5, save_artifacts=True)
         predicted_letters = self.predictor.predict_all(extracted_letters)
         words = letters_to_words(predicted_letters)
-        return " ".join(correct_word(word) for word in words)
+        return " ".join(words)
